@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Bell, User, Moon, Sun } from 'lucide-react';
 import { SyncStatusIndicator, SyncStatus } from './SyncStatusIndicator';
 import { SetupProgressBar } from './SetupProgressBar';
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { useTheme } from 'next-themes';
+import { useUserPreferences } from '../../store/userPreferences';
 
 interface TopbarProps {
   syncStatus: SyncStatus;
@@ -22,6 +23,21 @@ interface TopbarProps {
 export function Topbar({ syncStatus, lastSync }: TopbarProps) {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const setThemePreference = useUserPreferences((state) => state.setTheme);
+  const storedTheme = useUserPreferences((state) => state.theme);
+
+  // Sync persisted theme with next-themes
+  useEffect(() => {
+    if (storedTheme && storedTheme !== theme) {
+      setTheme(storedTheme);
+    }
+  }, [storedTheme, theme, setTheme]);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    setThemePreference(newTheme as 'light' | 'dark');
+  };
 
   return (
     <>
@@ -40,7 +56,7 @@ export function Topbar({ syncStatus, lastSync }: TopbarProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}

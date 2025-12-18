@@ -104,7 +104,7 @@ import { useChartData } from '@/hooks/useChartData';
 
 function RevenueChart() {
   // Transactional data (from CQRS read layer)
-  const { data, isLoading } = useChartData('revenue');
+  const { data, isLoading } = useChartData('revenue-monthly');
   
   // Visual theme (from UX preferences)
   const theme = useChartThemeConfig();
@@ -202,7 +202,7 @@ const isAccessibilityMode = useUserPreferences(
 
 ```tsx
 function Chart() {
-  const { data } = useChartData('revenue'); // Data layer
+  const { data } = useChartData('revenue-monthly'); // Data layer
   const theme = useChartThemeConfig();       // Preference layer
   const colors = getChartColors(theme);      // Derive colors from theme
   
