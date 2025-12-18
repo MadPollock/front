@@ -3,6 +3,7 @@ import { RevenueChart } from '../components/analytics/RevenueChart';
 import { UserActivityChart } from '../components/analytics/UserActivityChart';
 import { TransactionChart } from '../components/analytics/TransactionChart';
 import { ChevronDown, ArrowDownLeft, ArrowUpRight, ChevronRight } from 'lucide-react';
+import { OnboardingWidget } from '../components/layout/OnboardingWidget';
 
 // Mock recent transactions
 const recentTransactions = [
@@ -37,6 +38,8 @@ export function DashboardView() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
+      <OnboardingWidget />
+
       {/* Mobile-First: Primary Balance Section (Hero) - No card, spacing defines hierarchy */}
       <div className="space-y-2">
         <p className="text-muted-foreground" style={{ fontSize: '13px' }}>

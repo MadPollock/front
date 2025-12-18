@@ -8,7 +8,8 @@ import { useChartThemeConfig, getChartColors } from '../../store/userPreferences
 import { useStrings } from '../../hooks/useStrings';
 
 export function RevenueChart() {
-  const { data, isLoading, error, refetch } = useChartData('revenue', {
+  const { t } = useStrings();
+  const { data, isLoading, error, refetch } = useChartData('revenue-monthly', {
     dataSource: 'api',
     refreshInterval: 30000, // Auto-refresh every 30 seconds
     queryParams: { scope: 'monthly' },

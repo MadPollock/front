@@ -17,6 +17,7 @@ import { useIsSidebarCollapsed, useUserPreferences } from '../../store/userPrefe
 import { Button } from '../ui/button';
 import { useAuth } from '../../contexts/AuthContext';
 import type { RBACRole } from '../../contexts/AuthContext';
+import { useStrings } from '../../hooks/useStrings';
 
 interface NavItem {
   id: string;
@@ -92,6 +93,7 @@ export function Sidebar({ activeNav, onNavChange, forceExpanded = false }: Sideb
   const isCollapsed = useIsSidebarCollapsed();
   const toggleSidebar = useUserPreferences((state) => state.toggleSidebar);
   const { hasRole } = useAuth();
+  const { t } = useStrings();
   
   // On mobile sheet, always show expanded
   const showExpanded = forceExpanded || !isCollapsed;

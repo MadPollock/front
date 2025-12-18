@@ -5,7 +5,7 @@
  * It provides a UI for users to customize their experience.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
@@ -23,17 +23,17 @@ import {
   CheckCircle2,
   Circle
 } from 'lucide-react';
-import { useUserPreferences, ChartTheme, useSetupComplete, useSetupSteps } from '../../store/userPreferences';
+import { useUserPreferences, ChartTheme, useOnboardingProgress } from '../../store/userPreferences';
 import { useTheme } from 'next-themes';
 
 export function PreferencesPanel() {
   const { theme, setTheme } = useTheme();
-  const setupComplete = useSetupComplete();
-  const setupSteps = useSetupSteps();
+  const { step: onboardingStep, steps: onboardingSteps } = useOnboardingProgress();
   const {
     // State
     sidebarCollapsed,
     compactMode,
+    theme: themePreference,
     chartTheme,
     animationsEnabled,
     notificationsEnabled,
@@ -55,13 +55,19 @@ export function PreferencesPanel() {
     setDateFormat,
     setNumberFormat,
     resetPreferences,
-    completeSetupStep,
-    dismissSetup,
+    setTheme: setThemePreference,
+    completeOnboardingStep,
+    setOnboardingStepStatus,
   } = useUserPreferences();
 
-  // Compute progress values
-  const completedSteps = Object.values(setupSteps).filter(Boolean).length;
-  const totalSteps = Object.keys(setupSteps).length;
+  useEffect(() => {
+    if (themePreference !== theme) {
+      setTheme(themePreference);
+    }
+  }, [themePreference, theme, setTheme]);
+
+  const completedSteps = Object.values(onboardingSteps).filter((status) => status === 'completed').length;
+  const totalSteps = Object.keys(onboardingSteps).length;
 
   return (
     <div className="space-y-6 pb-6">
@@ -96,7 +102,11 @@ export function PreferencesPanel() {
             <Switch
               id="dark-mode"
               checked={theme === 'dark'}
-              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+              onCheckedChange={(checked) => {
+                const newTheme = checked ? 'dark' : 'light';
+                setTheme(newTheme);
+                setThemePreference(newTheme);
+              }}
             />
           </div>
         </CardContent>
@@ -366,31 +376,34 @@ export function PreferencesPanel() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            {Object.entries(setupSteps).map(([key, completed]) => {
+            {Object.entries(onboardingSteps).map(([key, status]) => {
               const labels = {
-                profileCompleted: 'Complete your profile',
-                firstPaymentConfigured: 'Configure payment method',
-                whitelistConfigured: 'Add whitelist addresses',
-                teamMemberAdded: 'Invite team member',
+                kyc: 'Complete KYC with Facial Recognition',
+                mfa: 'Setup MFA',
+                template: 'Create a Template',
+                checkout: 'Create a checkout/payment',
               };
-              
+              const isComplete = status === 'completed';
               return (
                 <div key={key} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {completed ? (
+                    {isComplete ? (
                       <CheckCircle2 className="size-4 text-primary" />
                     ) : (
                       <Circle className="size-4 text-muted-foreground" />
                     )}
-                    <span className={`text-sm ${completed ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                    <span className={`text-sm ${isComplete ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                       {labels[key as keyof typeof labels]}
                     </span>
                   </div>
-                  {!completed && (
+                  {!isComplete && (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => completeSetupStep(key as keyof typeof setupSteps)}
+                      onClick={() => {
+                        setOnboardingStepStatus(key as any, 'completed');
+                        completeOnboardingStep(key as any);
+                      }}
                     >
                       Complete
                     </Button>
@@ -409,7 +422,7 @@ export function PreferencesPanel() {
                 {completedSteps} of {totalSteps} steps completed
               </p>
             </div>
-            {setupComplete && (
+            {onboardingStep >= totalSteps && (
               <span className="text-sm text-primary font-medium">✓ Complete</span>
             )}
           </div>

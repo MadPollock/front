@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { getQueryDefinition, QueryId } from '../lib/queries';
 
 export interface ChartDataPoint {
   name: string;
@@ -33,12 +34,26 @@ export function useChartData<T extends ChartDataPoint>(
     setError(null);
 
     try {
+      const definition = getQueryDefinition(queryId);
       const readApiBase = import.meta.env?.VITE_READ_API_URL;
-      const urlBase = endpoint || (readApiBase ? `${readApiBase.replace(/\/$/, '')}/${chartId}` : null);
+      const urlBase = endpoint || (readApiBase ? `${readApiBase.replace(/\/$/, '')}/${definition.endpoint}` : null);
 
       // Prefer API reads when configured; fallback to mock data otherwise
       if (dataSource === 'api' && urlBase) {
         const url = new URL(urlBase);
+        const paramsToSend = {
+          ...definition.defaultParams,
+          ...queryParams,
+        };
+
+        if (paramsToSend) {
+          Object.entries(paramsToSend).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              url.searchParams.set(key, String(value));
+            }
+          });
+        }
+
         if (queryParams) {
           Object.entries(queryParams).forEach(([key, value]) => {
             url.searchParams.set(key, String(value));
@@ -74,10 +89,10 @@ export function useChartData<T extends ChartDataPoint>(
       // Mock fallback
       if (dataSource === 'mock' || !urlBase) {
         if (dataSource === 'api' && !urlBase) {
-          console.warn('VITE_READ_API_URL not configured, serving mock data for', chartId);
+          console.warn('VITE_READ_API_URL not configured, serving mock data for', definition.id);
         }
         await new Promise(resolve => setTimeout(resolve, 500));
-        const mockData = generateMockData(chartId);
+        const mockData = generateMockData(queryId);
         setData(mockData as T[]);
       }
     } catch (err) {
@@ -85,7 +100,7 @@ export function useChartData<T extends ChartDataPoint>(
     } finally {
       setIsLoading(false);
     }
-  }, [chartId, dataSource, endpoint, getAccessToken, queryParams, user?.id, user?.metadata, user?.role]);
+  }, [dataSource, endpoint, getAccessToken, queryId, queryParams, user?.id, user?.metadata, user?.role]);
 
   useEffect(() => {
     fetchData();

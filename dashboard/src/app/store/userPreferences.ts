@@ -18,6 +18,15 @@ import { persist, createJSONStorage } from 'zustand/middleware';
  * Theme configuration for charts and UI components
  */
 export type ChartTheme = 'default' | 'vibrant' | 'muted' | 'monochrome';
+export type ThemePreference = 'light' | 'dark';
+
+export type OnboardingStepId =
+  | 'kyc'
+  | 'mfa'
+  | 'template'
+  | 'checkout';
+
+export type OnboardingStepStatus = 'pending' | 'in_progress' | 'completed';
 
 /**
  * User preference state interface
@@ -26,6 +35,7 @@ export interface UserPreferences {
   // UI Layout Preferences
   sidebarCollapsed: boolean;
   compactMode: boolean;
+  theme: ThemePreference;
   
   // Visual Theme Preferences
   chartTheme: ChartTheme;
@@ -52,13 +62,9 @@ export interface UserPreferences {
   lastRefreshTime: number | null;
   
   // Setup Progress Tracking
-  setupComplete: boolean;
-  setupSteps: {
-    profileCompleted: boolean;
-    firstPaymentConfigured: boolean;
-    whitelistConfigured: boolean;
-    teamMemberAdded: boolean;
-  };
+  onboardingStep: number; // 0-4
+  onboardingSteps: Record<OnboardingStepId, OnboardingStepStatus>;
+  dismissedBanners: string[];
 }
 
 /**
@@ -69,6 +75,7 @@ export interface UserPreferencesActions {
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setCompactMode: (enabled: boolean) => void;
+  setTheme: (theme: ThemePreference) => void;
   
   // Theme actions
   setChartTheme: (theme: ChartTheme) => void;
@@ -96,8 +103,10 @@ export interface UserPreferencesActions {
   updateLastRefreshTime: () => void;
   
   // Setup tracking actions
-  completeSetupStep: (step: keyof UserPreferences['setupSteps']) => void;
-  dismissSetup: () => void;
+  setOnboardingStep: (step: number) => void;
+  completeOnboardingStep: (stepId: OnboardingStepId) => void;
+  setOnboardingStepStatus: (stepId: OnboardingStepId, status: OnboardingStepStatus) => void;
+  dismissBanner: (bannerId: string) => void;
   
   // Utility actions
   resetPreferences: () => void;
@@ -114,6 +123,7 @@ export type UserPreferencesStore = UserPreferences & UserPreferencesActions;
 const defaultPreferences: UserPreferences = {
   sidebarCollapsed: false,
   compactMode: false,
+  theme: 'light',
   chartTheme: 'default',
   animationsEnabled: true,
   favoriteViews: [],
@@ -126,13 +136,14 @@ const defaultPreferences: UserPreferences = {
   numberFormat: 'compact',
   lastVisitedView: 'dashboard',
   lastRefreshTime: null,
-  setupComplete: false,
-  setupSteps: {
-    profileCompleted: false,
-    firstPaymentConfigured: false,
-    whitelistConfigured: false,
-    teamMemberAdded: false,
+  onboardingStep: 0,
+  onboardingSteps: {
+    kyc: 'pending',
+    mfa: 'pending',
+    template: 'pending',
+    checkout: 'pending',
   },
+  dismissedBanners: [],
 };
 
 /**
@@ -169,6 +180,9 @@ export const useUserPreferences = create<UserPreferencesStore>()(
       
       setCompactMode: (enabled) => 
         set({ compactMode: enabled }),
+
+      setTheme: (theme) =>
+        set({ theme }),
       
       setChartTheme: (theme) => 
         set({ chartTheme: theme }),
@@ -215,24 +229,38 @@ export const useUserPreferences = create<UserPreferencesStore>()(
       updateLastRefreshTime: () => 
         set({ lastRefreshTime: Date.now() }),
       
-      completeSetupStep: (step) => 
+      setOnboardingStep: (step) =>
+        set({ onboardingStep: Math.min(Math.max(step, 0), 4) }),
+
+      setOnboardingStepStatus: (stepId, status) =>
+        set((state) => ({
+          onboardingSteps: {
+            ...state.onboardingSteps,
+            [stepId]: status,
+          },
+        })),
+
+      completeOnboardingStep: (stepId) =>
         set((state) => {
-          const newSteps = {
-            ...state.setupSteps,
-            [step]: true,
+          const updatedSteps = {
+            ...state.onboardingSteps,
+            [stepId]: 'completed' as OnboardingStepStatus,
           };
-          
-          // Check if all steps are complete
-          const allComplete = Object.values(newSteps).every(Boolean);
-          
+
+          const completedCount = Object.values(updatedSteps).filter((v) => v === 'completed').length;
+
           return {
-            setupSteps: newSteps,
-            setupComplete: allComplete,
+            onboardingSteps: updatedSteps,
+            onboardingStep: completedCount,
           };
         }),
-      
-      dismissSetup: () => 
-        set({ setupComplete: true }),
+
+      dismissBanner: (bannerId) =>
+        set((state) => ({
+          dismissedBanners: state.dismissedBanners.includes(bannerId)
+            ? state.dismissedBanners
+            : [...state.dismissedBanners, bannerId],
+        })),
       
       resetPreferences: () => 
         set(defaultPreferences),
@@ -244,6 +272,7 @@ export const useUserPreferences = create<UserPreferencesStore>()(
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
         compactMode: state.compactMode,
+        theme: state.theme,
         chartTheme: state.chartTheme,
         animationsEnabled: state.animationsEnabled,
         favoriteViews: state.favoriteViews,
@@ -255,8 +284,9 @@ export const useUserPreferences = create<UserPreferencesStore>()(
         dateFormat: state.dateFormat,
         numberFormat: state.numberFormat,
         lastVisitedView: state.lastVisitedView,
-        setupComplete: state.setupComplete,
-        setupSteps: state.setupSteps,
+        onboardingStep: state.onboardingStep,
+        onboardingSteps: state.onboardingSteps,
+        dismissedBanners: state.dismissedBanners,
       }),
     }
   )
@@ -285,11 +315,11 @@ export const useAccessibilitySettings = () =>
     reducedMotion: state.reducedMotion,
   }));
 
-export const useSetupComplete = () =>
-  useUserPreferences((state) => state.setupComplete);
-
-export const useSetupSteps = () =>
-  useUserPreferences((state) => state.setupSteps);
+export const useOnboardingProgress = () =>
+  useUserPreferences((state) => ({
+    step: state.onboardingStep,
+    steps: state.onboardingSteps,
+  }));
 
 /**
  * Get chart theme colors based on current preference
