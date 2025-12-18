@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '../ui/select';
 import { postCommand, CommandContext } from '../../lib/commandClient';
-import { useStrings } from '../../hooks/useStrings';
 
 // Mock data for accounts
 const accountsData = [

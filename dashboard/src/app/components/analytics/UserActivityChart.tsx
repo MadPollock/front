@@ -4,13 +4,12 @@ import { useChartData } from '../../hooks/useChartData';
 import { ChartContainer } from './ChartContainer';
 import { Button } from '../ui/button';
 import { RefreshCw } from 'lucide-react';
-import { useStrings } from '../../hooks/useStrings';
 
 export function UserActivityChart() {
-  const { t } = useStrings();
-  const { data, isLoading, error, refetch } = useChartData('user-activity-daily', {
+  const { data, isLoading, error, refetch } = useChartData('users', {
     dataSource: 'api',
     refreshInterval: 45000,
+    queryParams: { granularity: 'daily' },
   });
 
   return (

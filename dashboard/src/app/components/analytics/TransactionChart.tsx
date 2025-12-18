@@ -4,13 +4,12 @@ import { useChartData } from '../../hooks/useChartData';
 import { ChartContainer } from './ChartContainer';
 import { Button } from '../ui/button';
 import { RefreshCw } from 'lucide-react';
-import { useStrings } from '../../hooks/useStrings';
 
 export function TransactionChart() {
-  const { t } = useStrings();
-  const { data, isLoading, error, refetch } = useChartData('transactions-24h', {
+  const { data, isLoading, error, refetch } = useChartData('transactions', {
     dataSource: 'api',
     refreshInterval: 60000,
+    queryParams: { range: '24h' },
   });
 
   return (

@@ -5,7 +5,6 @@ import { MFAModal } from './MFAModal';
 import { Shield, Loader2 } from 'lucide-react';
 import { CommandContext } from '../../lib/commandClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { useStrings } from '../../hooks/useStrings';
 
 interface ProtectedActionFormProps {
   title: string;
@@ -30,7 +29,6 @@ export function ProtectedActionForm({
   actionDescription,
 }: ProtectedActionFormProps) {
   const { getAccessToken, user } = useAuth();
-  const { t } = useStrings();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMFAModal, setShowMFAModal] = useState(false);
   const [pendingData, setPendingData] = useState<any>(null);

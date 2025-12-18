@@ -8,10 +8,10 @@ import { useChartThemeConfig, getChartColors } from '../../store/userPreferences
 import { useStrings } from '../../hooks/useStrings';
 
 export function RevenueChart() {
-  const { t } = useStrings();
-  const { data, isLoading, error, refetch } = useChartData('revenue-monthly', {
+  const { data, isLoading, error, refetch } = useChartData('revenue', {
     dataSource: 'api',
     refreshInterval: 30000, // Auto-refresh every 30 seconds
+    queryParams: { scope: 'monthly' },
   });
   
   // Get user's chart theme preference (UX State - separate from data)

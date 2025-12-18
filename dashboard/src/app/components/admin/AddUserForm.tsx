@@ -4,11 +4,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { postCommand, CommandContext } from '../../lib/commandClient';
-import { useStrings } from '../../hooks/useStrings';
 
 export function AddUserForm() {
-  const { t } = useStrings();
-
   const handleAddUser = async (
     data: Record<string, FormDataEntryValue>,
     context: CommandContext
