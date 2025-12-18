@@ -10,6 +10,7 @@ import {
 import { Button } from '../ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '../ui/input-otp';
 import { Shield, Loader2 } from 'lucide-react';
+import { useStrings } from '../../hooks/useStrings';
 
 interface MFAModalProps {
   isOpen: boolean;
@@ -22,10 +23,11 @@ export function MFAModal({ isOpen, onClose, onVerify, actionDescription }: MFAMo
   const [code, setCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
+  const { t } = useStrings();
 
   const handleVerify = async () => {
     if (code.length !== 6) {
-      setError('Please enter a 6-digit code');
+      setError(t('mfa.error'));
       return;
     }
 
@@ -37,7 +39,7 @@ export function MFAModal({ isOpen, onClose, onVerify, actionDescription }: MFAMo
       onClose();
       setCode('');
     } catch (err) {
-      setError('Invalid verification code. Please try again.');
+      setError(t('mfa.invalid'));
     } finally {
       setIsVerifying(false);
     }
@@ -58,9 +60,9 @@ export function MFAModal({ isOpen, onClose, onVerify, actionDescription }: MFAMo
               <Shield className="size-6 text-amber-600" />
             </div>
             <div>
-              <DialogTitle>Two-Factor Authentication</DialogTitle>
+              <DialogTitle>{t('mfa.title')}</DialogTitle>
               <DialogDescription className="mt-1">
-                This action requires additional verification
+                {t('mfa.description')}
               </DialogDescription>
             </div>
           </div>
@@ -75,7 +77,7 @@ export function MFAModal({ isOpen, onClose, onVerify, actionDescription }: MFAMo
 
           <div className="space-y-2">
             <label className="text-sm">
-              Enter the 6-digit code from your authenticator app
+              {t('mfa.prompt')}
             </label>
             <div className="flex justify-center">
               <InputOTP
@@ -104,16 +106,16 @@ export function MFAModal({ isOpen, onClose, onVerify, actionDescription }: MFAMo
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={isVerifying}>
-            Cancel
+            {t('mfa.cancel')}
           </Button>
           <Button onClick={handleVerify} disabled={isVerifying || code.length !== 6}>
             {isVerifying ? (
               <>
                 <Loader2 className="size-4 mr-2 animate-spin" />
-                Verifying...
+                {t('protectedForm.processing')}
               </>
             ) : (
-              'Verify & Submit'
+              t('mfa.verify')
             )}
           </Button>
         </DialogFooter>

@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { postCommand, CommandContext } from '../../lib/commandClient';
+import { useStrings } from '../../hooks/useStrings';
 
 // Mock data for accounts
 const accountsData = [
@@ -119,23 +121,20 @@ export function WithdrawalRequestForm() {
   const [selectedAccount, setSelectedAccount] = React.useState('');
   const [selectedWallet, setSelectedWallet] = React.useState('');
   const [withdrawalType, setWithdrawalType] = React.useState<'same' | 'brl'>('same');
+  const { t } = useStrings();
 
-  const handleWithdrawal = async (data: any) => {
-    // Simulate API call to write-model command handler
-    console.log('Executing withdrawal command:', { 
-      ...data, 
-      account: selectedAccount, 
+  const handleWithdrawal = async (
+    data: Record<string, FormDataEntryValue>,
+    context: CommandContext
+  ) => {
+    const payload = {
+      ...data,
+      account: selectedAccount,
       wallet: selectedWallet,
-      withdrawalType 
-    });
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // In production:
-    // await fetch('/api/commands/withdraw', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data)
-    // });
+      withdrawalType,
+    };
+
+    await postCommand('withdrawals/request', payload, context);
   };
 
   // Get the selected account details
@@ -171,18 +170,18 @@ export function WithdrawalRequestForm() {
 
   return (
     <ProtectedActionForm
-      title="Withdrawal Request"
-      description="Submit a withdrawal request. This action requires MFA verification."
+      title={t('form.withdraw.title')}
+      description={t('form.withdraw.description')}
       onSubmit={handleWithdrawal}
       requiresMFA={true}
       actionDescription="Withdraw funds to external address"
     >
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="account">From Account</Label>
+          <Label htmlFor="account">{t('form.withdraw.account')}</Label>
           <Select value={selectedAccount} onValueChange={setSelectedAccount}>
             <SelectTrigger id="account">
-              <SelectValue placeholder="Select account" />
+              <SelectValue placeholder={t('form.withdraw.account')} />
             </SelectTrigger>
             <SelectContent>
               {accountsData.map((currencyGroup) => (
@@ -207,14 +206,14 @@ export function WithdrawalRequestForm() {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Select the account to withdraw from
+            {t('form.withdraw.account.helper')}
           </p>
         </div>
 
         {/* Withdrawal Type - Only show for non-BRL accounts */}
         {selectedAccountDetails && selectedAccountDetails.currency !== 'BRL' && (
           <div className="space-y-2">
-            <Label htmlFor="withdrawal-type">Withdraw As</Label>
+            <Label htmlFor="withdrawal-type">{t('form.withdraw.type')}</Label>
             <Select value={withdrawalType} onValueChange={(value: 'same' | 'brl') => setWithdrawalType(value)}>
               <SelectTrigger id="withdrawal-type">
                 <SelectValue />
@@ -222,17 +221,17 @@ export function WithdrawalRequestForm() {
               <SelectContent>
                 <SelectItem value="same">
                   <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-sm font-medium">Same Currency ({selectedAccountDetails.currency})</span>
+                    <span className="text-sm font-medium">{t('form.withdraw.type.same')} ({selectedAccountDetails.currency})</span>
                     <span className="text-xs text-muted-foreground">
-                      Direct withdrawal via {selectedAccountDetails.network}
+                      {t('form.withdraw.type.same.helper', { network: selectedAccountDetails.network })}
                     </span>
                   </div>
                 </SelectItem>
                 <SelectItem value="brl">
                   <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-sm font-medium">Convert to BRL</span>
+                    <span className="text-sm font-medium">{t('form.withdraw.type.brl')}</span>
                     <span className="text-xs text-muted-foreground">
-                      Automatic conversion, receive via PIX
+                      {t('form.withdraw.type.brl.helper')}
                     </span>
                   </div>
                 </SelectItem>
@@ -240,14 +239,14 @@ export function WithdrawalRequestForm() {
             </Select>
             {withdrawalType === 'brl' && (
               <p className="text-xs text-muted-foreground">
-                Funds will be automatically converted to BRL at market rate
+                {t('form.withdraw.type.brl.helper')}
               </p>
             )}
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="amount">Amount</Label>
+          <Label htmlFor="amount">{t('form.withdraw.amount')}</Label>
           <Input
             id="amount"
             name="amount"
@@ -264,14 +263,14 @@ export function WithdrawalRequestForm() {
           )}
           {!selectedAccount && (
             <p className="text-xs text-muted-foreground">
-              Select an account first
+              {t('form.withdraw.amount.helper')}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="wallet">
-            {withdrawalType === 'brl' ? 'To PIX Address' : 'To Wallet Address'}
+            {withdrawalType === 'brl' ? t('form.withdraw.wallet.pix') : t('form.withdraw.wallet')}
           </Label>
           <Select 
             value={selectedWallet} 
@@ -279,7 +278,7 @@ export function WithdrawalRequestForm() {
             disabled={!selectedAccount}
           >
             <SelectTrigger id="wallet">
-              <SelectValue placeholder={withdrawalType === 'brl' ? 'Select PIX address' : 'Select whitelisted wallet'} />
+              <SelectValue placeholder={withdrawalType === 'brl' ? t('form.withdraw.wallet.placeholder.pix') : t('form.withdraw.wallet.placeholder')} />
             </SelectTrigger>
             <SelectContent>
               {filteredWallets.length > 0 ? (
@@ -304,8 +303,8 @@ export function WithdrawalRequestForm() {
               ) : (
                 <SelectItem value="none" disabled>
                   {selectedAccount 
-                    ? `No whitelisted ${withdrawalType === 'brl' ? 'PIX addresses' : 'wallets'} available`
-                    : 'Select an account first'}
+                    ? (withdrawalType === 'brl' ? t('form.withdraw.wallet.none.pix') : t('form.withdraw.wallet.none'))
+                    : t('form.withdraw.amount.helper')}
                 </SelectItem>
               )}
             </SelectContent>
@@ -321,7 +320,7 @@ export function WithdrawalRequestForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="note">Note (Optional)</Label>
+          <Label htmlFor="note">{t('form.withdraw.note')}</Label>
           <Input
             id="note"
             name="note"
