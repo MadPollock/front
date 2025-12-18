@@ -1,54 +1,33 @@
 import React from 'react';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
-import { useSetupComplete, useSetupSteps } from '../../store/userPreferences';
+import { useOnboardingProgress } from '../../store/userPreferences';
 import { Button } from '../ui/button';
+import { useStrings } from '../../hooks/useStrings';
 
 export function SetupProgressBar() {
-  const setupComplete = useSetupComplete();
-  const setupSteps = useSetupSteps();
+  const { t } = useStrings();
+  const { step, steps } = useOnboardingProgress();
+  const totalSteps = Object.keys(steps).length;
 
   // Don't render if setup is complete
-  if (setupComplete) {
+  if (step >= totalSteps) {
     return null;
   }
 
   const stepLabels = {
-    profileCompleted: 'Complete your profile',
-    firstPaymentConfigured: 'Configure payment method',
-    whitelistConfigured: 'Add whitelist addresses',
-    teamMemberAdded: 'Invite team member',
-  };
-
-  const stepActions = {
-    profileCompleted: () => {
-      // Navigate to profile/settings
-      const settingsLink = document.querySelector('a[href="#settings"]') as HTMLAnchorElement;
-      settingsLink?.click();
-    },
-    firstPaymentConfigured: () => {
-      // Navigate to actions view (where payment configuration would be)
-      const actionsLink = document.querySelector('a[href="#actions"]') as HTMLAnchorElement;
-      actionsLink?.click();
-    },
-    whitelistConfigured: () => {
-      // Navigate to actions view
-      const actionsLink = document.querySelector('a[href="#actions"]') as HTMLAnchorElement;
-      actionsLink?.click();
-    },
-    teamMemberAdded: () => {
-      // Navigate to settings
-      const settingsLink = document.querySelector('a[href="#settings"]') as HTMLAnchorElement;
-      settingsLink?.click();
-    },
-  };
+    kyc: 'Complete KYC with Facial Recognition',
+    mfa: 'Setup MFA',
+    template: 'Create a Template',
+    checkout: 'Create a checkout/payment',
+  } as const;
 
   // Compute progress values
-  const completedSteps = Object.values(setupSteps).filter(Boolean).length;
-  const totalSteps = Object.keys(setupSteps).length;
+  const completedSteps = Object.values(steps).filter((status) => status === 'completed').length;
   const progress = (completedSteps / totalSteps) * 100;
 
   // Find the next incomplete step
-  const nextStep = Object.entries(setupSteps).find(([_, completed]) => !completed)?.[0] as keyof typeof stepLabels | undefined;
+  const nextStep = (Object.entries(steps).find(([_, status]) => status !== 'completed')?.[0] ??
+    undefined) as keyof typeof stepLabels | undefined;
 
   return (
     <div className="bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 border-b border-primary/20">
@@ -60,7 +39,7 @@ export function SetupProgressBar() {
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-primary flex-shrink-0" />
                 <span className="text-sm font-medium text-foreground">
-                  Getting Started
+                  {t('layout.brand.subtitle')} • Onboarding
                 </span>
               </div>
               <span className="text-xs text-muted-foreground hidden sm:inline">
@@ -91,7 +70,10 @@ export function SetupProgressBar() {
             <Button
               size="sm"
               className="flex-shrink-0 gap-1.5 bg-primary hover:bg-primary/90"
-              onClick={stepActions[nextStep]}
+              onClick={() => {
+                const widget = document.getElementById('onboarding-widget');
+                widget?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
             >
               <span className="hidden sm:inline">Continue Setup</span>
               <span className="sm:hidden">Continue</span>

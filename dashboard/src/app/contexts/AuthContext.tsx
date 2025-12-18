@@ -1,11 +1,17 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 
-interface User {
+export type RBACRole = 'admin' | 'user';
+
+export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'user';
+  role: RBACRole;
+  metadata: {
+    app?: Record<string, unknown>;
+    user?: Record<string, unknown>;
+  };
 }
 
 interface AuthContextType {
@@ -14,6 +20,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   getAccessToken: () => Promise<string | undefined>;
+  hasRole: (roles: RBACRole | RBACRole[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,7 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: auth0User.sub || '',
         name: auth0User.name || auth0User.email || 'User',
         email: auth0User.email || '',
-        role: (auth0User['https://crossramp.app/role'] as 'admin' | 'user') || 'user',
+        role: (auth0User['https://crossramp.app/role'] as RBACRole) || 'user',
+        metadata: {
+          app: (auth0User as any).app_metadata ?? {},
+          user: (auth0User as any).user_metadata ?? {},
+        },
       }
     : null;
 
@@ -67,6 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const hasRole = (roles: RBACRole | RBACRole[]) => {
+    const roleList = Array.isArray(roles) ? roles : [roles];
+    return user ? roleList.includes(user.role) : false;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -75,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         getAccessToken,
+        hasRole,
       }}
     >
       {children}
