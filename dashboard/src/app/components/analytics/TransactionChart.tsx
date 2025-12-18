@@ -2,16 +2,28 @@ import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useChartData } from '../../hooks/useChartData';
 import { ChartContainer } from './ChartContainer';
+import { Button } from '../ui/button';
+import { RefreshCw } from 'lucide-react';
+import { useStrings } from '../../hooks/useStrings';
 
 export function TransactionChart() {
-  const { data, isLoading, error } = useChartData('transactions');
+  const { t } = useStrings();
+  const { data, isLoading, error, refetch } = useChartData('transactions-24h', {
+    dataSource: 'api',
+    refreshInterval: 60000,
+  });
 
   return (
     <ChartContainer
-      title="Transaction Volume"
-      description="Hourly transaction count"
+      title={t('charts.transactions.title')}
+      description={t('charts.transactions.description')}
       isLoading={isLoading}
       error={error}
+      actions={
+        <Button variant="ghost" size="icon" onClick={refetch}>
+          <RefreshCw className="size-4" />
+        </Button>
+      }
     >
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={data}>
