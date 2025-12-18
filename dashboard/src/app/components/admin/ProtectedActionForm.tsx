@@ -3,12 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { MFAModal } from './MFAModal';
 import { Shield, Loader2 } from 'lucide-react';
+import { CommandContext } from '../../lib/commandClient';
+import { useAuth } from '../../contexts/AuthContext';
+import { useStrings } from '../../hooks/useStrings';
 
 interface ProtectedActionFormProps {
   title: string;
   description: string;
   children: React.ReactNode;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: Record<string, FormDataEntryValue>, context: CommandContext) => Promise<void>;
   requiresMFA?: boolean;
   actionDescription: string;
 }
@@ -26,6 +29,8 @@ export function ProtectedActionForm({
   requiresMFA = true,
   actionDescription,
 }: ProtectedActionFormProps) {
+  const { getAccessToken, user } = useAuth();
+  const { t } = useStrings();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMFAModal, setShowMFAModal] = useState(false);
   const [pendingData, setPendingData] = useState<any>(null);
@@ -53,17 +58,21 @@ export function ProtectedActionForm({
     setPendingData(null);
   };
 
-  const executeSubmit = async (data: any) => {
+  const executeSubmit = async (data: Record<string, FormDataEntryValue>) => {
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
     try {
-      // In production, this would send a command to the write-model API
-      // Example: await fetch('/api/commands/withdraw', { method: 'POST', body: JSON.stringify(data) });
-      
-      await onSubmit(data);
+      const accessToken = await getAccessToken();
+      const submissionContext: CommandContext = {
+        accessToken,
+        user,
+        mfaCode: (data as any).mfaCode as string | undefined,
+      };
+
+      await onSubmit(data, submissionContext);
       setSubmitStatus('success');
-      
+
       // Reset form on success
       setTimeout(() => setSubmitStatus('idle'), 3000);
     } catch (error) {
@@ -86,7 +95,7 @@ export function ProtectedActionForm({
               <CardTitle className="flex items-center gap-2">
                 {title}
                 <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
-                  WRITE ACTION
+                  {t('write.badge')}
                 </span>
               </CardTitle>
               <CardDescription>{description}</CardDescription>
@@ -100,7 +109,7 @@ export function ProtectedActionForm({
             {submitStatus === 'success' && (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <p className="text-sm text-green-800 dark:text-green-200">
-                  ✓ Action completed successfully
+                  {t('protectedForm.success')}
                 </p>
               </div>
             )}
@@ -108,7 +117,7 @@ export function ProtectedActionForm({
             {submitStatus === 'error' && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
                 <p className="text-sm text-red-800 dark:text-red-200">
-                  ✗ Action failed. Please try again.
+                  {t('protectedForm.error')}
                 </p>
               </div>
             )}
@@ -121,12 +130,12 @@ export function ProtectedActionForm({
               {isSubmitting ? (
                 <>
                   <Loader2 className="size-4 mr-2 animate-spin" />
-                  Processing...
+                  {t('protectedForm.processing')}
                 </>
               ) : (
                 <>
                   <Shield className="size-4 mr-2" />
-                  {requiresMFA ? 'Submit (Requires MFA)' : 'Submit'}
+                  {requiresMFA ? t('protectedForm.submit.mfa') : t('protectedForm.submit')}
                 </>
               )}
             </Button>

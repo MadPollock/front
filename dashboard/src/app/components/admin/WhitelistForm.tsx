@@ -10,6 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { postCommand, CommandContext } from '../../lib/commandClient';
+import { useStrings } from '../../hooks/useStrings';
 
 // Currency and network options
 const currencyNetworkOptions = [
@@ -21,10 +23,19 @@ const currencyNetworkOptions = [
 export function WhitelistForm() {
   const [selectedCurrency, setSelectedCurrency] = React.useState('');
   const [selectedNetwork, setSelectedNetwork] = React.useState('');
+  const { t } = useStrings();
 
-  const handleWhitelist = async (data: any) => {
-    console.log('Executing whitelist command:', { ...data, currency: selectedCurrency, network: selectedNetwork });
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  const handleWhitelist = async (
+    data: Record<string, FormDataEntryValue>,
+    context: CommandContext
+  ) => {
+    const payload = {
+      ...data,
+      currency: selectedCurrency,
+      network: selectedNetwork,
+    };
+
+    await postCommand('whitelist/add', payload, context);
   };
 
   // Get available networks for the selected currency
@@ -39,8 +50,8 @@ export function WhitelistForm() {
 
   return (
     <ProtectedActionForm
-      title="Add to Whitelist"
-      description="Add an address to the whitelist. This action requires MFA verification."
+      title={t('form.whitelist.title')}
+      description={t('form.whitelist.description')}
       onSubmit={handleWhitelist}
       requiresMFA={true}
       actionDescription="Add address to whitelist"
@@ -48,10 +59,10 @@ export function WhitelistForm() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
+            <Label htmlFor="currency">{t('form.whitelist.currency')}</Label>
             <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
               <SelectTrigger id="currency">
-                <SelectValue placeholder="Select currency" />
+                <SelectValue placeholder={t('form.whitelist.currency')} />
               </SelectTrigger>
               <SelectContent>
                 {currencyNetworkOptions.map((option) => (
@@ -64,14 +75,14 @@ export function WhitelistForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="network">Network</Label>
+            <Label htmlFor="network">{t('form.whitelist.network')}</Label>
             <Select 
               value={selectedNetwork} 
               onValueChange={setSelectedNetwork}
               disabled={!selectedCurrency}
             >
               <SelectTrigger id="network">
-                <SelectValue placeholder="Select network" />
+                <SelectValue placeholder={t('form.whitelist.network')} />
               </SelectTrigger>
               <SelectContent>
                 {availableNetworks.length > 0 ? (
@@ -91,7 +102,7 @@ export function WhitelistForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="whitelist-label">Wallet Label</Label>
+          <Label htmlFor="whitelist-label">{t('form.whitelist.label')}</Label>
           <Input
             id="whitelist-label"
             name="label"
@@ -100,12 +111,12 @@ export function WhitelistForm() {
             required
           />
           <p className="text-xs text-muted-foreground">
-            A friendly name to identify this wallet
+            {t('form.whitelist.label.helper')}
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="whitelist-address">Address</Label>
+          <Label htmlFor="whitelist-address">{t('form.whitelist.address')}</Label>
           <Input
             id="whitelist-address"
             name="address"
@@ -117,13 +128,15 @@ export function WhitelistForm() {
           />
           {selectedNetwork && (
             <p className="text-xs text-muted-foreground">
-              {selectedNetwork === 'PIX' ? 'PIX key' : `${selectedNetwork} wallet address`}
+              {selectedNetwork === 'PIX' 
+                ? t('form.whitelist.address.pix') 
+                : `${selectedNetwork} ${t('form.whitelist.address.helper')}`}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="whitelist-reason">Reason</Label>
+          <Label htmlFor="whitelist-reason">{t('form.whitelist.reason')}</Label>
           <Textarea
             id="whitelist-reason"
             name="reason"
