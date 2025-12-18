@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { Auth0Provider } from '@auth0/auth0-react';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, isMockAuthEnabled } from './contexts/AuthContext';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { DashboardView } from './views/DashboardView';
 import { AnalyticsView } from './views/AnalyticsView';
@@ -48,15 +48,27 @@ export default function App() {
     }
   };
 
+  const AuthenticatedApp = ({ children }: { children: ReactNode }) => {
+    if (isMockAuthEnabled) {
+      return children;
+    }
+
+    return (
+      <Auth0Provider
+        domain={auth0Config.domain}
+        clientId={auth0Config.clientId}
+        authorizationParams={{
+          redirect_uri: window.location.origin,
+          audience: auth0Config.audience,
+        }}
+      >
+        {children}
+      </Auth0Provider>
+    );
+  };
+
   return (
-    <Auth0Provider
-      domain={auth0Config.domain}
-      clientId={auth0Config.clientId}
-      authorizationParams={{
-        redirect_uri: window.location.origin,
-        audience: auth0Config.audience,
-      }}
-    >
+    <AuthenticatedApp>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <AuthProvider>
           <DashboardLayout activeNav={activeNav} onNavChange={setActiveNav}>
@@ -64,6 +76,6 @@ export default function App() {
           </DashboardLayout>
         </AuthProvider>
       </ThemeProvider>
-    </Auth0Provider>
+    </AuthenticatedApp>
   );
 }

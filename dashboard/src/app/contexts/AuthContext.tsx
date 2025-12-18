@@ -25,7 +25,60 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const mockAuthEnabled = import.meta.env?.VITE_ENABLE_MOCK_AUTH === 'true';
+
+const mockUser: User = {
+  id: 'auth0|mock-user',
+  name: 'Preview User',
+  email: 'preview.user@example.com',
+  role: 'admin',
+  metadata: {
+    app: {
+      featureFlags: ['preview-mode'],
+    },
+    user: {
+      preferredTheme: 'light',
+    },
+  },
+};
+
+export const isMockAuthEnabled = mockAuthEnabled;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
+  if (mockAuthEnabled) {
+    const login = useCallback(async (_email: string, _password: string) => {
+      console.info('[MockAuth] login invoked - mock user already authenticated');
+    }, []);
+
+    const logout = useCallback(() => {
+      console.info('[MockAuth] logout invoked - mock session persisted for preview');
+    }, []);
+
+    const getAccessToken = useCallback(async () => 'mock-access-token', []);
+
+    const hasRole = useCallback(
+      (roles: RBACRole | RBACRole[]) => {
+        const roleList = Array.isArray(roles) ? roles : [roles];
+        return roleList.includes(mockUser.role);
+      },
+      []
+    );
+
+    const value = useMemo(
+      () => ({
+        user: mockUser,
+        isAuthenticated: true,
+        login,
+        logout,
+        getAccessToken,
+        hasRole,
+      }),
+      [login, logout, getAccessToken, hasRole]
+    );
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  }
+
   const {
     isAuthenticated,
     user: auth0User,
