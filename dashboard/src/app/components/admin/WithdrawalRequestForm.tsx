@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { postCommand, CommandContext } from '../../lib/commandClient';
 
 // Mock data for accounts
 const accountsData = [
@@ -120,22 +121,18 @@ export function WithdrawalRequestForm() {
   const [selectedWallet, setSelectedWallet] = React.useState('');
   const [withdrawalType, setWithdrawalType] = React.useState<'same' | 'brl'>('same');
 
-  const handleWithdrawal = async (data: any) => {
-    // Simulate API call to write-model command handler
-    console.log('Executing withdrawal command:', { 
-      ...data, 
-      account: selectedAccount, 
+  const handleWithdrawal = async (
+    data: Record<string, FormDataEntryValue>,
+    context: CommandContext
+  ) => {
+    const payload = {
+      ...data,
+      account: selectedAccount,
       wallet: selectedWallet,
-      withdrawalType 
-    });
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // In production:
-    // await fetch('/api/commands/withdraw', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data)
-    // });
+      withdrawalType,
+    };
+
+    await postCommand('withdrawals/request', payload, context);
   };
 
   // Get the selected account details

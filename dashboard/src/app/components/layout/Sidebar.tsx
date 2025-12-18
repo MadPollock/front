@@ -15,12 +15,15 @@ import {
 } from 'lucide-react';
 import { useIsSidebarCollapsed, useUserPreferences } from '../../store/userPreferences';
 import { Button } from '../ui/button';
+import { useAuth } from '../../contexts/AuthContext';
+import type { RBACRole } from '../../contexts/AuthContext';
 
 interface NavItem {
   id: string;
   label: string;
   icon: React.ReactNode;
   isWriteAction?: boolean;
+  allowedRoles?: RBACRole[];
 }
 
 interface NavSection {
@@ -45,25 +48,29 @@ const navSections: NavSection[] = [
         id: 'withdraw', 
         label: 'Withdraw', 
         icon: <Wallet className="size-5" />,
-        isWriteAction: true 
+        isWriteAction: true,
+        allowedRoles: ['admin'],
       },
       { 
         id: 'whitelist', 
         label: 'Whitelist', 
         icon: <ListChecks className="size-5" />,
-        isWriteAction: true 
+        isWriteAction: true,
+        allowedRoles: ['admin'],
       },
       { 
         id: 'add-user', 
         label: 'Add User', 
         icon: <UserPlus className="size-5" />,
-        isWriteAction: true 
+        isWriteAction: true,
+        allowedRoles: ['admin'],
       },
       { 
         id: 'templates', 
         label: 'Templates', 
         icon: <FileText className="size-5" />,
-        isWriteAction: true 
+        isWriteAction: true,
+        allowedRoles: ['admin'],
       },
     ],
   },
@@ -84,6 +91,7 @@ interface SidebarProps {
 export function Sidebar({ activeNav, onNavChange, forceExpanded = false }: SidebarProps) {
   const isCollapsed = useIsSidebarCollapsed();
   const toggleSidebar = useUserPreferences((state) => state.toggleSidebar);
+  const { hasRole } = useAuth();
   
   // On mobile sheet, always show expanded
   const showExpanded = forceExpanded || !isCollapsed;
@@ -120,7 +128,9 @@ export function Sidebar({ activeNav, onNavChange, forceExpanded = false }: Sideb
               </h3>
             )}
             <ul className="space-y-1">
-              {section.items.map((item) => (
+              {section.items
+                .filter((item) => !item.allowedRoles || hasRole(item.allowedRoles))
+                .map((item) => (
                 <li key={item.id}>
                   <button
                     onClick={() => onNavChange(item.id)}
