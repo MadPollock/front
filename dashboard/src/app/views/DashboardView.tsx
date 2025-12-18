@@ -4,6 +4,7 @@ import { UserActivityChart } from '../components/analytics/UserActivityChart';
 import { TransactionChart } from '../components/analytics/TransactionChart';
 import { ChevronDown, ArrowDownLeft, ArrowUpRight, ChevronRight } from 'lucide-react';
 import { OnboardingWidget } from '../components/layout/OnboardingWidget';
+import { useStrings } from '../hooks/useStrings';
 
 // Mock recent transactions
 const recentTransactions = [
@@ -35,6 +36,7 @@ const recentTransactions = [
 
 export function DashboardView() {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { t } = useStrings();
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
@@ -43,7 +45,7 @@ export function DashboardView() {
       {/* Mobile-First: Primary Balance Section (Hero) - No card, spacing defines hierarchy */}
       <div className="space-y-2">
         <p className="text-muted-foreground" style={{ fontSize: '13px' }}>
-          Available balance
+          {t('dashboard.balance.label')}
         </p>
         <p style={{ 
           fontFamily: 'Manrope', 
@@ -55,41 +57,41 @@ export function DashboardView() {
           R$ 12.480,90
         </p>
         <div className="flex items-center gap-3 text-muted-foreground" style={{ fontSize: '12px' }}>
-          <span>BRL · settles in USDT</span>
+          <span>{t('dashboard.balance.meta')}</span>
           <span className="size-1 bg-muted-foreground/40 rounded-full" />
-          <span>Updated 2 min ago</span>
+          <span>{t('dashboard.balance.updated')}</span>
         </div>
       </div>
 
       {/* Primary Actions - Text-only buttons, flat */}
       <div className="flex items-center gap-3">
         <button className="flex-1 md:flex-none md:px-8 h-11 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors">
-          Receive payment
+          {t('dashboard.action.receive')}
         </button>
         <button className="flex-1 md:flex-none md:px-8 h-11 border border-border bg-card text-foreground rounded-xl hover:bg-muted/50 transition-colors">
-          Withdraw
+          {t('dashboard.action.withdraw')}
         </button>
       </div>
 
       {/* Today Snapshot Card - First and only prominent card */}
       <div className="bg-card rounded-2xl p-6 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
         <div className="flex items-center justify-between">
-          <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 500 }}>Today</h2>
-          <button className="text-primary text-sm hover:underline">View details</button>
+          <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 500 }}>{t('dashboard.today.title')}</h2>
+          <button className="text-primary text-sm hover:underline">{t('dashboard.today.viewDetails')}</button>
         </div>
         
         {/* Numeric rows - no visuals */}
         <div className="space-y-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Payments received</span>
+            <span className="text-muted-foreground text-sm">{t('dashboard.today.paymentsReceived')}</span>
             <span style={{ fontFamily: 'Manrope', fontSize: '15px', fontWeight: 500 }}>R$ 3.240,00</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Payments pending</span>
+            <span className="text-muted-foreground text-sm">{t('dashboard.today.paymentsPending')}</span>
             <span style={{ fontFamily: 'Manrope', fontSize: '15px', fontWeight: 500 }}>R$ 580,00</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Fees</span>
+            <span className="text-muted-foreground text-sm">{t('dashboard.today.fees')}</span>
             <span style={{ fontFamily: 'Manrope', fontSize: '15px', fontWeight: 500 }}>R$ 42,15</span>
           </div>
         </div>
@@ -98,9 +100,9 @@ export function DashboardView() {
       {/* Recent Transactions - Mobile-First */}
       <div className="bg-card rounded-2xl p-6 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
         <div className="flex items-center justify-between">
-          <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 500 }}>Recent activity</h2>
+          <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 500 }}>{t('dashboard.recent.title')}</h2>
           <button className="flex items-center gap-1 text-primary text-sm hover:underline">
-            View all
+            {t('dashboard.recent.viewAll')}
             <ChevronRight className="size-4" />
           </button>
         </div>
@@ -138,12 +140,12 @@ export function DashboardView() {
 
       {/* Payment Status - Subtle, at-a-glance only */}
       <div className="bg-card rounded-2xl p-6 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
-        <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 500 }}>Payment status</h2>
+        <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 500 }}>{t('dashboard.status.title')}</h2>
         
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Completed</span>
+              <span className="text-muted-foreground">{t('dashboard.status.completed')}</span>
               <span style={{ fontFamily: 'Manrope', fontWeight: 500 }}>24</span>
             </div>
             <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
@@ -153,7 +155,7 @@ export function DashboardView() {
           
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Pending</span>
+              <span className="text-muted-foreground">{t('dashboard.status.pending')}</span>
               <span style={{ fontFamily: 'Manrope', fontWeight: 500 }}>6</span>
             </div>
             <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
@@ -171,7 +173,7 @@ export function DashboardView() {
           style={{ boxShadow: 'var(--shadow-sm)' }}
         >
           <span style={{ fontFamily: 'Manrope', fontSize: '16px', fontWeight: 500 }}>
-            Show advanced analytics
+            {t('dashboard.advanced.toggle')}
           </span>
           <ChevronDown className={`size-5 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
         </button>

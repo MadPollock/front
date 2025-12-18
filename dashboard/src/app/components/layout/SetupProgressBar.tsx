@@ -15,10 +15,10 @@ export function SetupProgressBar() {
   }
 
   const stepLabels = {
-    kyc: 'Complete KYC with Facial Recognition',
-    mfa: 'Setup MFA',
-    template: 'Create a Template',
-    checkout: 'Create a checkout/payment',
+    kyc: t('onboarding.step.kyc.title'),
+    mfa: t('onboarding.step.mfa.title'),
+    template: t('onboarding.step.template.title'),
+    checkout: t('onboarding.step.checkout.title'),
   } as const;
 
   // Compute progress values
@@ -43,7 +43,7 @@ export function SetupProgressBar() {
                 </span>
               </div>
               <span className="text-xs text-muted-foreground hidden sm:inline">
-                {completedSteps} of {totalSteps} completed
+                {t('onboarding.progress', { completed: completedSteps, total: totalSteps })}
               </span>
             </div>
             
@@ -75,8 +75,8 @@ export function SetupProgressBar() {
                 widget?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
             >
-              <span className="hidden sm:inline">Continue Setup</span>
-              <span className="sm:hidden">Continue</span>
+              <span className="hidden sm:inline">{t('onboarding.scrollCta')}</span>
+              <span className="sm:hidden">{t('onboarding.scrollCta')}</span>
               <ArrowRight className="size-3.5" />
             </Button>
           )}

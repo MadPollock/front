@@ -7,6 +7,16 @@
 
 ---
 
+## Recent Frontend Changes (recap)
+- **Translations:** Dashboard/onboarding copy now lives in `src/app/content/strings.ts` and is consumed via `useStrings`. Add new UI copy there first, then read it with `t('your.key')`.
+- **Query Registry:** Analytics widgets reference named queries in `src/app/lib/queries.ts` (e.g., `revenue-monthly`, `transactions-24h`). Update endpoints/params in the registry; components pass the query ID into `useChartData`.
+- **Command Client:** Write flows should call `postCommand` from `src/app/lib/commandClient.ts` to forward Auth0 token, role, metadata, and MFA code. Provide the command name and payload only.
+- **UX Store:** `src/app/store/userPreferences.ts` tracks theme (light/dark), onboarding step statuses, and dismissed banners. Theme sync is handled in Topbar/PreferencesPanel via `setTheme`.
+- **Onboarding UI:** `OnboardingWidget` (dashboard) and `SetupProgressBar` (topbar) are driven by the onboarding state in the UX store; they currently simulate completion locally (no backend callbacks yet).
+- **Docs:** This handover reflects the above additions.
+
+---
+
 ## 1. File Structure
 
 ### Root Directory (`/src`)

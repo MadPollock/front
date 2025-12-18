@@ -9,6 +9,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
+import { useStrings } from '../../hooks/useStrings';
 
 const stepOrder: OnboardingStepId[] = ['kyc', 'mfa', 'template', 'checkout'];
 
@@ -17,26 +18,26 @@ const stepMeta: Record<
   { title: string; description: string; helper: string; badge?: string }
 > = {
   kyc: {
-    title: 'Complete KYC with Facial Recognition',
-    description: 'Verify your identity securely with a quick liveness check.',
-    helper: 'Takes ~2 minutes. Required before moving funds.',
-    badge: 'Compliance',
+    title: 'onboarding.step.kyc.title',
+    description: 'onboarding.step.kyc.description',
+    helper: 'onboarding.step.kyc.helper',
+    badge: 'onboarding.step.kyc.badge',
   },
   mfa: {
-    title: 'Setup MFA',
-    description: 'Add an authenticator app or hardware key for write actions.',
-    helper: 'Required to authorize withdrawals and whitelist changes.',
-    badge: 'Security',
+    title: 'onboarding.step.mfa.title',
+    description: 'onboarding.step.mfa.description',
+    helper: 'onboarding.step.mfa.helper',
+    badge: 'onboarding.step.mfa.badge',
   },
   template: {
-    title: 'Create a Template',
-    description: 'Define a reusable payout or invoice template.',
-    helper: 'Keeps write commands consistent for your team.',
+    title: 'onboarding.step.template.title',
+    description: 'onboarding.step.template.description',
+    helper: 'onboarding.step.template.helper',
   },
   checkout: {
-    title: 'Create a checkout/payment',
-    description: 'Spin up a sample checkout to validate the flow end-to-end.',
-    helper: 'Simulates API-side callback processing.',
+    title: 'onboarding.step.checkout.title',
+    description: 'onboarding.step.checkout.description',
+    helper: 'onboarding.step.checkout.helper',
   },
 };
 
@@ -44,6 +45,7 @@ export function OnboardingWidget() {
   const { steps } = useOnboardingProgress();
   const { completeOnboardingStep, setOnboardingStepStatus } = useUserPreferences();
   const [syncingStep, setSyncingStep] = useState<OnboardingStepId | null>(null);
+  const { t } = useStrings();
 
   const totalSteps = stepOrder.length;
   const completedCount = stepOrder.filter((id) => steps[id] === 'completed').length;
@@ -69,12 +71,12 @@ export function OnboardingWidget() {
         <div>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="size-4 text-primary" />
-            Finish onboarding
+            {t('onboarding.title')}
           </CardTitle>
-          <CardDescription>Complete these four steps to unlock write actions.</CardDescription>
+          <CardDescription>{t('onboarding.subtitle')}</CardDescription>
         </div>
         <div className="text-right space-y-1">
-          <p className="text-sm text-muted-foreground">{completedCount} of {totalSteps} done</p>
+          <p className="text-sm text-muted-foreground">{t('onboarding.progress', { completed: completedCount, total: totalSteps })}</p>
           <Progress value={progress} className="w-32" />
         </div>
       </CardHeader>
@@ -104,22 +106,22 @@ export function OnboardingWidget() {
                       >
                         {isCompleted ? <CheckCircle2 className="size-4" /> : <ArrowRight className="size-4" />}
                       </div>
-                      <span className="font-medium">{meta.title}</span>
+                      <span className="font-medium">{t(meta.title)}</span>
                       {meta.badge && (
                         <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                          {meta.badge}
+                          {t(meta.badge)}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{meta.description}</p>
-                    <p className="text-xs text-muted-foreground">{meta.helper}</p>
+                    <p className="text-sm text-muted-foreground">{t(meta.description)}</p>
+                    <p className="text-xs text-muted-foreground">{t(meta.helper)}</p>
                   </div>
                   {status === 'completed' && !isSyncing && (
-                    <span className="text-xs font-semibold text-primary">Completed</span>
+                    <span className="text-xs font-semibold text-primary">{t('onboarding.completed.label')}</span>
                   )}
                   {isSyncing && (
                     <span className="flex items-center gap-1 text-xs text-primary">
-                      <Loader2 className="size-4 animate-spin" /> Syncing…
+                      <Loader2 className="size-4 animate-spin" /> {t('onboarding.syncing')}
                     </span>
                   )}
                 </div>
@@ -130,7 +132,7 @@ export function OnboardingWidget() {
 
         <div className="rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
           <Shield className="size-4 text-primary" />
-          Writes remain API-driven; callbacks will validate each completed step asynchronously via Auth0/KYC services.
+          {t('onboarding.note')}
         </div>
       </CardContent>
     </Card>
