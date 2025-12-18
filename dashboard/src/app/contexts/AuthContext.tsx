@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 
 export type RBACRole = 'admin' | 'user';
@@ -35,21 +35,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useAuth0();
 
   // Map Auth0 user to our User interface
-  const user: User | null = auth0User
-    ? {
-        id: auth0User.sub || '',
-        name: auth0User.name || auth0User.email || 'User',
-        email: auth0User.email || '',
-        role: (auth0User['https://crossramp.app/role'] as RBACRole) || 'user',
-        metadata: {
-          app: (auth0User as any).app_metadata ?? {},
-          user: (auth0User as any).user_metadata ?? {},
-        },
-      }
-    : null;
+  const user: User | null = useMemo(
+    () =>
+      auth0User
+        ? {
+            id: auth0User.sub || '',
+            name: auth0User.name || auth0User.email || 'User',
+            email: auth0User.email || '',
+            role: (auth0User['https://crossramp.app/role'] as RBACRole) || 'user',
+            metadata: {
+              app: (auth0User as any).app_metadata ?? {},
+              user: (auth0User as any).user_metadata ?? {},
+            },
+          }
+        : null,
+    [auth0User]
+  );
 
   // Login wrapper - redirects to Auth0 Universal Login
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     // Auth0 uses redirect-based login, not direct credentials
     // For hosted login page, we don't pass credentials
     await loginWithRedirect({
@@ -57,46 +61,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         returnTo: window.location.pathname,
       },
     });
-  };
+  }, [loginWithRedirect]);
 
   // Logout wrapper
-  const logout = () => {
+  const logout = useCallback(() => {
     auth0Logout({
       logoutParams: {
         returnTo: window.location.origin,
       },
     });
-  };
+  }, [auth0Logout]);
 
   // Get access token for API calls
-  const getAccessToken = async (): Promise<string | undefined> => {
+  const getAccessToken = useCallback(async (): Promise<string | undefined> => {
     try {
       return await getAccessTokenSilently();
     } catch (error) {
       console.error('Error getting access token:', error);
       return undefined;
     }
-  };
+  }, [getAccessTokenSilently]);
 
-  const hasRole = (roles: RBACRole | RBACRole[]) => {
-    const roleList = Array.isArray(roles) ? roles : [roles];
-    return user ? roleList.includes(user.role) : false;
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        login,
-        logout,
-        getAccessToken,
-        hasRole,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const hasRole = useCallback(
+    (roles: RBACRole | RBACRole[]) => {
+      const roleList = Array.isArray(roles) ? roles : [roles];
+      return user ? roleList.includes(user.role) : false;
+    },
+    [user]
   );
+
+  const value = useMemo(
+    () => ({ user, isAuthenticated, login, logout, getAccessToken, hasRole }),
+    [user, isAuthenticated, login, logout, getAccessToken, hasRole]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 const useAuth = () => {
