@@ -18,17 +18,23 @@
 │   ├── /components               # Reusable components
 │   │   ├── /admin                # Protected write-action components
 │   │   ├── /analytics            # Chart components (read-only)
-│   │   ├── /layout               # Sidebar, Topbar, DashboardLayout
+│   │   ├── /layout               # Sidebar, Topbar, DashboardLayout, Onboarding
 │   │   ├── /settings             # User preferences UI
 │   │   ├── /ui                   # Base UI primitives (shadcn/ui style)
 │   │   └── /figma                # Figma-specific utilities
 │   ├── /contexts                 # React Context providers
 │   │   └── AuthContext.tsx       # Authentication state (mock)
 │   ├── /hooks                    # Custom React hooks
-│   │   └── useChartData.ts       # CQRS read-model data fetching
+│   │   ├── useChartData.ts       # CQRS read-model data fetching (query registry aware)
+│   │   └── useStrings.ts         # Locale-aware translation helper (EN/PT/ES)
+│   ├── /content                  # Translations and copy
+│   │   └── strings.ts            # Centralized user-facing copy (EN/PT/ES)
 │   ├── /store                    # Zustand state management
 │   │   ├── userPreferences.ts    # UX/UI preferences only
 │   │   └── README.md             # Store architecture guide
+│   ├── /lib                      # Frontend service helpers
+│   │   ├── commandClient.ts      # Authenticated command (write) client
+│   │   └── queries.ts            # Query registry (named endpoints + params)
 │   └── /views                    # Page-level components
 │       ├── DashboardView.tsx     # Main dashboard
 │       ├── AnalyticsView.tsx     # Analytics page
@@ -67,10 +73,11 @@
 
 **What's stored:**
 - Sidebar collapsed state
-- Chart theme preferences (colors only, not data)
+- Chart and UI theme preferences (includes light/dark + chart palettes)
 - Notification settings
 - Display format preferences
 - Last visited view
+- Onboarding progress (four steps) + dismissed banners
 
 **Persistence:** localStorage (`cqrs-dashboard-preferences` key)
 
@@ -227,10 +234,10 @@ setData(data);
 **Usage in components:**
 ```tsx
 // In RevenueChart.tsx
-const { data, isLoading, error } = useChartData('revenue');
+const { data, isLoading, error } = useChartData('revenue-monthly');
 
 // In TransactionChart.tsx  
-const { data } = useChartData('transactions');
+const { data } = useChartData('transactions-24h');
 ```
 
 **To connect to Go backend:**
@@ -241,19 +248,15 @@ const { data } = useChartData('transactions');
    ```
 
 2. **Replace mock logic in `useChartData.ts`:**
-   ```tsx
-   const fetchData = async () => {
-     setIsLoading(true);
-     try {
-       const response = await fetch(
-         `${import.meta.env.VITE_API_BASE_URL}/api/analytics/${chartId}`,
-         {
-           headers: {
-             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-             'Content-Type': 'application/json'
-           }
-         }
-       );
+```tsx
+const fetchData = async () => {
+  setIsLoading(true);
+  try {
+    const def = getQueryDefinition(queryId); // from /lib/queries
+    const response = await fetch(
+      `${import.meta.env.VITE_READ_API_URL}/${def.endpoint}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
        
        if (!response.ok) throw new Error('API Error');
        
@@ -280,6 +283,7 @@ const { data } = useChartData('transactions');
 2. `WhitelistForm.tsx` - Add wallet to whitelist
 3. `AddUserForm.tsx` - Create new user
 4. `ProtectedActionForm.tsx` - Generic MFA-protected form wrapper
+5. `lib/commandClient.ts` - Shared helper for authenticated, context-rich command posts (forwards Auth0 token, role, metadata, MFA code)
 
 **Example: Withdrawal Form**
 ```tsx
@@ -506,10 +510,11 @@ useEffect(() => {
 
 ✅ **These stay as-is:**
 - `/src/app/store/userPreferences.ts` - Client-side only
-- `/src/app/components/layout/Sidebar.tsx` - Pure UI
-- `/src/app/components/layout/Topbar.tsx` - Pure UI
+- `/src/app/components/layout/Sidebar.tsx` - Pure UI (now uses translation keys)
+- `/src/app/components/layout/Topbar.tsx` - Pure UI (persists theme preference)
 - `/src/app/components/ui/*` - Primitive components
 - `/src/app/components/settings/PreferencesPanel.tsx` - Zustand-backed
+- `/src/app/components/layout/OnboardingWidget.tsx` - Local onboarding UX only (simulated completion)
 
 ---
 
@@ -697,6 +702,8 @@ VITE_API_BASE_URL=http://localhost:8080
 - [ ] Account balances update on fetch
 - [ ] Withdrawal form submits to backend
 - [ ] MFA verification calls API
+- [ ] Command client forwards Auth0 token + metadata to write endpoints
+- [ ] Onboarding widget updated based on backend callbacks (if/when wired)
 - [ ] Error handling (401, 500, network errors)
 - [ ] CORS headers configured
 - [ ] Mobile responsiveness maintained
@@ -720,5 +727,5 @@ VITE_API_BASE_URL=http://localhost:8080
 ---
 
 **Last Updated:** December 17, 2025  
-**Version:** 1.0  
-**Frontend Ready For Integration:** ✅ Yes
+**Version:** 1.1  
+**Frontend Ready For Integration:** ✅ Yes (queries/commands now centralized; onboarding widget still local mock)
