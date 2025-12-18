@@ -33,41 +33,41 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: 'Overview',
+    title: 'nav.section.overview',
     items: [
-      { id: 'dashboard', label: 'Overview', icon: <LayoutDashboard className="size-5" /> },
-      { id: 'transactions', label: 'Payments', icon: <Wallet className="size-5" /> },
-      { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="size-5" /> },
-      { id: 'accounts', label: 'Accounts', icon: <Building2 className="size-5" /> },
+      { id: 'dashboard', label: 'nav.overview', icon: <LayoutDashboard className="size-5" /> },
+      { id: 'transactions', label: 'nav.payments', icon: <Wallet className="size-5" /> },
+      { id: 'analytics', label: 'nav.analytics', icon: <BarChart3 className="size-5" /> },
+      { id: 'accounts', label: 'nav.accounts', icon: <Building2 className="size-5" /> },
     ],
   },
   {
-    title: 'Actions',
+    title: 'nav.section.actions',
     items: [
       { 
         id: 'withdraw', 
-        label: 'Withdraw', 
+        label: 'nav.withdraw', 
         icon: <Wallet className="size-5" />,
         isWriteAction: true,
         allowedRoles: ['admin'],
       },
       { 
         id: 'whitelist', 
-        label: 'Whitelist', 
+        label: 'nav.whitelist', 
         icon: <ListChecks className="size-5" />,
         isWriteAction: true,
         allowedRoles: ['admin'],
       },
       { 
         id: 'add-user', 
-        label: 'Add User', 
+        label: 'nav.addUser', 
         icon: <UserPlus className="size-5" />,
         isWriteAction: true,
         allowedRoles: ['admin'],
       },
       { 
         id: 'templates', 
-        label: 'Templates', 
+        label: 'nav.templates', 
         icon: <FileText className="size-5" />,
         isWriteAction: true,
         allowedRoles: ['admin'],
@@ -75,9 +75,9 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: 'System',
+    title: 'nav.section.system',
     items: [
-      { id: 'settings', label: 'Settings', icon: <Settings className="size-5" /> },
+      { id: 'settings', label: 'nav.settings', icon: <Settings className="size-5" /> },
     ],
   },
 ];
@@ -106,8 +106,8 @@ export function Sidebar({ activeNav, onNavChange, forceExpanded = false }: Sideb
               <Zap className="size-5 text-white fill-white" />
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-foreground" style={{ fontFamily: 'Manrope' }}>Crossramp</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Dashboard</span>
+              <span className="font-semibold text-foreground" style={{ fontFamily: 'Manrope' }}>{t('layout.brand.title')}</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{t('layout.brand.subtitle')}</span>
             </div>
           </div>
         )}
@@ -124,7 +124,7 @@ export function Sidebar({ activeNav, onNavChange, forceExpanded = false }: Sideb
           <div key={section.title}>
             {showExpanded && (
               <h3 className="px-3 mb-2 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
-                {section.title}
+                {t(section.title)}
               </h3>
             )}
             <ul className="space-y-1">
@@ -151,7 +151,7 @@ export function Sidebar({ activeNav, onNavChange, forceExpanded = false }: Sideb
                       )}
                     </span>
                     {showExpanded && (
-                      <span className="text-sm font-medium">{item.label}</span>
+                      <span className="text-sm font-medium">{t(item.label)}</span>
                     )}
                   </button>
                 </li>

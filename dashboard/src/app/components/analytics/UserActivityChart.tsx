@@ -14,8 +14,8 @@ export function UserActivityChart() {
 
   return (
     <ChartContainer
-      title="User Activity"
-      description="Daily active and inactive users"
+      title={t('charts.userActivity.title')}
+      description={t('charts.userActivity.description')}
       isLoading={isLoading}
       error={error}
       actions={

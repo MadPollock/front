@@ -93,7 +93,7 @@ export function ProtectedActionForm({
               <CardTitle className="flex items-center gap-2">
                 {title}
                 <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
-                  WRITE ACTION
+                  {t('write.badge')}
                 </span>
               </CardTitle>
               <CardDescription>{description}</CardDescription>
@@ -107,7 +107,7 @@ export function ProtectedActionForm({
             {submitStatus === 'success' && (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <p className="text-sm text-green-800 dark:text-green-200">
-                  ✓ Action completed successfully
+                  {t('protectedForm.success')}
                 </p>
               </div>
             )}
@@ -115,7 +115,7 @@ export function ProtectedActionForm({
             {submitStatus === 'error' && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
                 <p className="text-sm text-red-800 dark:text-red-200">
-                  ✗ Action failed. Please try again.
+                  {t('protectedForm.error')}
                 </p>
               </div>
             )}
@@ -128,12 +128,12 @@ export function ProtectedActionForm({
               {isSubmitting ? (
                 <>
                   <Loader2 className="size-4 mr-2 animate-spin" />
-                  Processing...
+                  {t('protectedForm.processing')}
                 </>
               ) : (
                 <>
                   <Shield className="size-4 mr-2" />
-                  {requiresMFA ? 'Submit (Requires MFA)' : 'Submit'}
+                  {requiresMFA ? t('protectedForm.submit.mfa') : t('protectedForm.submit')}
                 </>
               )}
             </Button>

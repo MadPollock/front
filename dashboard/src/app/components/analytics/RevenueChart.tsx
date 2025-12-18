@@ -5,6 +5,7 @@ import { ChartContainer } from './ChartContainer';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useChartThemeConfig, getChartColors } from '../../store/userPreferences';
+import { useStrings } from '../../hooks/useStrings';
 
 export function RevenueChart() {
   const { data, isLoading, error, refetch } = useChartData('revenue', {
@@ -19,8 +20,8 @@ export function RevenueChart() {
 
   return (
     <ChartContainer
-      title="Revenue Overview"
-      description="Monthly revenue and expenses from read-model database"
+      title={t('charts.revenue.title')}
+      description={t('charts.revenue.description')}
       isLoading={isLoading}
       error={error}
       actions={

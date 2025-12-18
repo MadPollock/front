@@ -19,7 +19,7 @@ interface UseChartDataOptions {
  * Separates data fetching logic from presentation components.
  */
 export function useChartData<T extends ChartDataPoint>(
-  chartId: string,
+  queryId: QueryId,
   options: UseChartDataOptions = {}
 ) {
   const { dataSource = 'mock', refreshInterval, queryParams, endpoint } = options;
@@ -100,9 +100,9 @@ export function useChartData<T extends ChartDataPoint>(
 }
 
 // Mock data generator - in production, this comes from your read model database
-function generateMockData(chartId: string): ChartDataPoint[] {
-  switch (chartId) {
-    case 'revenue':
+function generateMockData(queryId: QueryId): ChartDataPoint[] {
+  switch (queryId) {
+    case 'revenue-monthly':
       return [
         { name: 'Jan', value: 4000, revenue: 4000, expenses: 2400 },
         { name: 'Feb', value: 3000, revenue: 3000, expenses: 1398 },
@@ -113,7 +113,7 @@ function generateMockData(chartId: string): ChartDataPoint[] {
         { name: 'Jul', value: 3490, revenue: 3490, expenses: 4300 },
       ];
     
-    case 'users':
+    case 'user-activity-daily':
       return [
         { name: 'Mon', value: 120, active: 120, inactive: 40 },
         { name: 'Tue', value: 150, active: 150, inactive: 30 },
@@ -124,7 +124,7 @@ function generateMockData(chartId: string): ChartDataPoint[] {
         { name: 'Sun', value: 135, active: 135, inactive: 50 },
       ];
     
-    case 'transactions':
+    case 'transactions-24h':
       return [
         { name: '00:00', value: 45 },
         { name: '04:00', value: 23 },

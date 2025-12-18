@@ -14,8 +14,8 @@ export function TransactionChart() {
 
   return (
     <ChartContainer
-      title="Transaction Volume"
-      description="Hourly transaction count"
+      title={t('charts.transactions.title')}
+      description={t('charts.transactions.description')}
       isLoading={isLoading}
       error={error}
       actions={
