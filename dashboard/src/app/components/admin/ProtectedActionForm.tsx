@@ -3,12 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { MFAModal } from './MFAModal';
 import { Shield, Loader2 } from 'lucide-react';
+import { CommandContext } from '../../lib/commandClient';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface ProtectedActionFormProps {
   title: string;
   description: string;
   children: React.ReactNode;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: Record<string, FormDataEntryValue>, context: CommandContext) => Promise<void>;
   requiresMFA?: boolean;
   actionDescription: string;
 }
@@ -26,6 +28,7 @@ export function ProtectedActionForm({
   requiresMFA = true,
   actionDescription,
 }: ProtectedActionFormProps) {
+  const { getAccessToken, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMFAModal, setShowMFAModal] = useState(false);
   const [pendingData, setPendingData] = useState<any>(null);
@@ -53,17 +56,21 @@ export function ProtectedActionForm({
     setPendingData(null);
   };
 
-  const executeSubmit = async (data: any) => {
+  const executeSubmit = async (data: Record<string, FormDataEntryValue>) => {
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
     try {
-      // In production, this would send a command to the write-model API
-      // Example: await fetch('/api/commands/withdraw', { method: 'POST', body: JSON.stringify(data) });
-      
-      await onSubmit(data);
+      const accessToken = await getAccessToken();
+      const submissionContext: CommandContext = {
+        accessToken,
+        user,
+        mfaCode: (data as any).mfaCode as string | undefined,
+      };
+
+      await onSubmit(data, submissionContext);
       setSubmitStatus('success');
-      
+
       // Reset form on success
       setTimeout(() => setSubmitStatus('idle'), 3000);
     } catch (error) {

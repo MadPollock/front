@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { postCommand, CommandContext } from '../../lib/commandClient';
 
 // Currency and network options
 const currencyNetworkOptions = [
@@ -22,9 +23,17 @@ export function WhitelistForm() {
   const [selectedCurrency, setSelectedCurrency] = React.useState('');
   const [selectedNetwork, setSelectedNetwork] = React.useState('');
 
-  const handleWhitelist = async (data: any) => {
-    console.log('Executing whitelist command:', { ...data, currency: selectedCurrency, network: selectedNetwork });
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  const handleWhitelist = async (
+    data: Record<string, FormDataEntryValue>,
+    context: CommandContext
+  ) => {
+    const payload = {
+      ...data,
+      currency: selectedCurrency,
+      network: selectedNetwork,
+    };
+
+    await postCommand('whitelist/add', payload, context);
   };
 
   // Get available networks for the selected currency

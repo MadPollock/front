@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export interface ChartDataPoint {
   name: string;
@@ -9,6 +10,8 @@ export interface ChartDataPoint {
 interface UseChartDataOptions {
   dataSource?: 'api' | 'mock';
   refreshInterval?: number;
+  queryParams?: Record<string, string | number>;
+  endpoint?: string;
 }
 
 /**
@@ -19,45 +22,81 @@ export function useChartData<T extends ChartDataPoint>(
   chartId: string,
   options: UseChartDataOptions = {}
 ) {
-  const { dataSource = 'mock', refreshInterval } = options;
+  const { dataSource = 'mock', refreshInterval, queryParams, endpoint } = options;
+  const { getAccessToken, user } = useAuth();
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        // In production, this would call your read-model API
-        // Example: const response = await fetch(`/api/analytics/${chartId}`);
-        
-        if (dataSource === 'mock') {
-          // Simulate API delay
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Generate mock data based on chartId
-          const mockData = generateMockData(chartId);
-          setData(mockData as T[]);
+    try {
+      const readApiBase = import.meta.env?.VITE_READ_API_URL;
+      const urlBase = endpoint || (readApiBase ? `${readApiBase.replace(/\/$/, '')}/${chartId}` : null);
+
+      // Prefer API reads when configured; fallback to mock data otherwise
+      if (dataSource === 'api' && urlBase) {
+        const url = new URL(urlBase);
+        if (queryParams) {
+          Object.entries(queryParams).forEach(([key, value]) => {
+            url.searchParams.set(key, String(value));
+          });
         }
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
+        if (user?.id) {
+          url.searchParams.set('userId', user.id);
+        }
+
+        const token = await getAccessToken();
+        if (!token) {
+          throw new Error('Missing access token for read query');
+        }
+
+        const response = await fetch(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'x-user-role': user?.role || '',
+            'x-user-metadata': JSON.stringify(user?.metadata ?? {}),
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Read query failed with status ${response.status}`);
+        }
+
+        const body = await response.json();
+        setData((body?.data as T[]) ?? (body as T[]));
+        return;
+      }
+
+      // Mock fallback
+      if (dataSource === 'mock' || !urlBase) {
+        if (dataSource === 'api' && !urlBase) {
+          console.warn('VITE_READ_API_URL not configured, serving mock data for', chartId);
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const mockData = generateMockData(chartId);
+        setData(mockData as T[]);
+      }
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [chartId, dataSource, endpoint, getAccessToken, queryParams, user?.id, user?.metadata, user?.role]);
+
+  useEffect(() => {
     fetchData();
 
-    // Set up auto-refresh if specified
     if (refreshInterval) {
       const interval = setInterval(fetchData, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [chartId, dataSource, refreshInterval]);
+  }, [fetchData, refreshInterval]);
 
-  return { data, isLoading, error, refetch: () => setIsLoading(true) };
+  return { data, isLoading, error, refetch: fetchData };
 }
 
 // Mock data generator - in production, this comes from your read model database

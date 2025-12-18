@@ -2,9 +2,15 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useChartData } from '../../hooks/useChartData';
 import { ChartContainer } from './ChartContainer';
+import { Button } from '../ui/button';
+import { RefreshCw } from 'lucide-react';
 
 export function UserActivityChart() {
-  const { data, isLoading, error } = useChartData('users');
+  const { data, isLoading, error, refetch } = useChartData('users', {
+    dataSource: 'api',
+    refreshInterval: 45000,
+    queryParams: { granularity: 'daily' },
+  });
 
   return (
     <ChartContainer
@@ -12,6 +18,11 @@ export function UserActivityChart() {
       description="Daily active and inactive users"
       isLoading={isLoading}
       error={error}
+      actions={
+        <Button variant="ghost" size="icon" onClick={refetch}>
+          <RefreshCw className="size-4" />
+        </Button>
+      }
     >
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>

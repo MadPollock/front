@@ -3,11 +3,20 @@ import { ProtectedActionForm } from './ProtectedActionForm';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { postCommand, CommandContext } from '../../lib/commandClient';
 
 export function AddUserForm() {
-  const handleAddUser = async (data: any) => {
-    console.log('Executing add user command:', data);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  const handleAddUser = async (
+    data: Record<string, FormDataEntryValue>,
+    context: CommandContext
+  ) => {
+    const payload = {
+      name: data.name,
+      email: data.email,
+      role: data.role,
+    };
+
+    await postCommand('users/add', payload, context);
   };
 
   return (
