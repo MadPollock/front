@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ArrowRight, CheckCircle2, Loader2, Shield, Sparkles } from 'lucide-react';
 import {
   OnboardingStepId,
@@ -43,27 +43,35 @@ const stepMeta: Record<
 
 export function OnboardingWidget() {
   const { steps } = useOnboardingProgress();
-  const { completeOnboardingStep, setOnboardingStepStatus } = useUserPreferences();
+  const { completeOnboardingStep } = useUserPreferences();
   const [syncingStep, setSyncingStep] = useState<OnboardingStepId | null>(null);
   const { t } = useStrings();
 
-  const totalSteps = stepOrder.length;
-  const completedCount = stepOrder.filter((id) => steps[id] === 'completed').length;
-  const progress = (completedCount / totalSteps) * 100;
+  const { totalSteps, completedCount, progress } = useMemo(() => {
+    const total = stepOrder.length;
+    const completed = stepOrder.filter((id) => steps[id] === 'completed').length;
+    return {
+      totalSteps: total,
+      completedCount: completed,
+      progress: (completed / total) * 100,
+    };
+  }, [steps]);
 
-  const handleStepClick = (stepId: OnboardingStepId) => {
-    if (steps[stepId] === 'completed') return;
+  const handleStepClick = useCallback(
+    (stepId: OnboardingStepId) => {
+      if (steps[stepId] === 'completed' || syncingStep === stepId) return;
 
-    // Optimistic completion
-    setOnboardingStepStatus(stepId, 'completed');
-    completeOnboardingStep(stepId);
-    setSyncingStep(stepId);
+      // Optimistic completion with a single state update
+      completeOnboardingStep(stepId);
+      setSyncingStep(stepId);
 
-    // Simulated background sync callback
-    setTimeout(() => {
-      setSyncingStep((current) => (current === stepId ? null : current));
-    }, 900);
-  };
+      // Simulated background sync callback
+      window.setTimeout(() => {
+        setSyncingStep((current) => (current === stepId ? null : current));
+      }, 900);
+    },
+    [completeOnboardingStep, steps, syncingStep]
+  );
 
   return (
     <Card id="onboarding-widget" className="border-primary/20 bg-primary/5 dark:bg-primary/10">

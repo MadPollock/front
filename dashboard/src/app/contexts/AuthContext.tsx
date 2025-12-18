@@ -106,4 +106,4 @@ const useAuth = () => {
   return context;
 };
 
-export { AuthContext, AuthProvider as default, useAuth };
+export { AuthContext, useAuth };
